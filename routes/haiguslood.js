@@ -1,7 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../models');
-const { body, param, validationResult } = require('express-validator');
+const { body, param } = require('express-validator');
+const { authenticateJWT, authorizeRoles } = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const createCrudController = require('../controllers/crudController');
+const { logCreate, logDelete, logWarnNotFound, logError } = require('../logger');
+
+const crud = createCrudController(db.Haiguslood);
 
 /**
  * @swagger
@@ -13,10 +19,31 @@ const { body, param, validationResult } = require('express-validator');
  *       200:
  *         description: List of medical records
  */
-router.get('/', async (req, res) => {
-  const records = await db.Haiguslood.findAll();
-  res.json(records);
-});
+// Protect all endpoints except admin-only with authenticateJWT and authorizeRoles('Admin', 'User')
+
+// GET all medical records
+router.get('/', authenticateJWT, authorizeRoles('Admin', 'User'), crud.list);
+
+/**
+ * @swagger
+ * /haiguslood/{id}:
+ *   get:
+ *     summary: Get a medical record by ID
+ *     tags: [Haiguslood]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Medical record found
+ *       404:
+ *         description: Medical record not found
+ */
+// GET medical record by ID
+router.get('/:id', authenticateJWT, authorizeRoles('Admin', 'User'), crud.get);
 
 /**
  * @swagger
@@ -46,50 +73,21 @@ router.get('/', async (req, res) => {
  *       201:
  *         description: Medical record created
  */
-router.post(
-  '/',
-  [
-    body('PatsiendiID').isInt(),
-    body('T99tajaID').isInt(),
-    body('KliendiID').isInt(),
-    body('Kuup2ev').isISO8601(),
-    body('Kirjeldus').isString()
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    const record = await db.Haiguslood.create(req.body);
-    res.status(201).json(record);
-  }
-);
-
-/**
- * @swagger
- * /haiguslood/{id}:
- *   get:
- *     summary: Get a medical record by ID
- *     tags: [Haiguslood]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Medical record found
- *       404:
- *         description: Medical record not found
- */
-router.get('/:id', async (req, res) => {
+// POST create medical record
+router.post('/', authenticateJWT, authorizeRoles('Admin', 'User'), [
+  body('PatsiendiID').isInt(),
+  body('T99tajaID').isInt(),
+  body('KliendiID').isInt(),
+  body('Kuup2ev').isISO8601(),
+  body('Kirjeldus').isString()
+], validate, async (req, res, next) => {
   try {
-    const record = await db.Haiguslood.findByPk(req.params.id);
-    if (!record) return res.status(404).json({ error: 'Not found' });
-    res.json(record);
+    const item = await db.Haiguslood.create(req.body);
+    logCreate('MedicalRecord', req.user?.id || 'unknown', req.body);
+    res.status(201).json(item);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError('MedicalRecord', 'creating', err.message, { data: req.body });
+    next(err);
   }
 });
 
@@ -125,35 +123,19 @@ router.get('/:id', async (req, res) => {
  *       404:
  *         description: Medical record not found
  */
-router.put(
-  '/:id',
-  [
-    param('id').isInt(),
-    body('PatsiendiID').optional().isInt(),
-    body('Kuup2ev').optional().isISO8601(),
-    body('Kirjeldus').optional().isString()
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-      const record = await db.Haiguslood.findByPk(req.params.id);
-      if (!record) return res.status(404).json({ error: 'Not found' });
-      await record.update(req.body);
-      res.json(record);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
+// PUT update medical record
+router.put('/:id', authenticateJWT, authorizeRoles('Admin', 'User'), [
+  param('id').isInt(),
+  body('PatsiendiID').optional().isInt(),
+  body('Kuup2ev').optional().isISO8601(),
+  body('Kirjeldus').optional().isString()
+], validate, crud.update);
 
 /**
  * @swagger
  * /haiguslood/{id}:
  *   delete:
- *     summary: Delete a medical record by ID
+ *     summary: Delete a medical record by ID (Admin only)
  *     tags: [Haiguslood]
  *     parameters:
  *       - in: path
@@ -167,14 +149,19 @@ router.put(
  *       404:
  *         description: Medical record not found
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), async (req, res, next) => {
   try {
-    const record = await db.Haiguslood.findByPk(req.params.id);
-    if (!record) return res.status(404).json({ error: 'Not found' });
-    await record.destroy();
+    const item = await db.Haiguslood.findByPk(req.params.id);
+    if (!item) {
+      logWarnNotFound('MedicalRecord', req.user?.id || 'unknown', req.params);
+      return res.status(404).json({ error: 'Not found' });
+    }
+    await item.destroy();
+    logDelete('MedicalRecord', req.user?.id || 'unknown', req.params);
     res.status(204).send();
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError('MedicalRecord', 'deleting', err.message, { params: req.params });
+    next(err);
   }
 });
 
@@ -182,18 +169,20 @@ router.delete('/:id', async (req, res) => {
  * @swagger
  * /haiguslood:
  *   delete:
- *     summary: Delete all medical records
+ *     summary: Delete all medical records (Admin only)
  *     tags: [Haiguslood]
  *     responses:
  *       204:
  *         description: All medical records deleted
  */
-router.delete('/', async (req, res) => {
+router.delete('/', authenticateJWT, authorizeRoles('Admin'), async (req, res, next) => {
   try {
     await db.Haiguslood.destroy({ where: {} });
+    logDelete('All MedicalRecords', req.user?.id || 'unknown', {});
     res.status(204).send();
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError('MedicalRecord', 'deleting all', err.message, {});
+    next(err);
   }
 });
 

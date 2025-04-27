@@ -1,7 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../models');
-const { body, param, validationResult } = require('express-validator');
+const { body, param } = require('express-validator');
+const { authenticateJWT, authorizeRoles } = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const createCrudController = require('../controllers/crudController');
+const { logCreate, logDelete, logWarnNotFound, logError } = require('../logger');
+
+const crud = createCrudController(db.Visiit);
 
 /**
  * @swagger
@@ -13,10 +19,10 @@ const { body, param, validationResult } = require('express-validator');
  *       200:
  *         description: List of visits
  */
-router.get('/', async (req, res) => {
-  const visits = await db.Visiit.findAll();
-  res.json(visits);
-});
+// Protect all endpoints except admin-only with authenticateJWT and authorizeRoles('Admin', 'User')
+
+// GET all visits
+router.get('/', authenticateJWT, authorizeRoles('Admin', 'User'), crud.list);
 
 /**
  * @swagger
@@ -36,15 +42,8 @@ router.get('/', async (req, res) => {
  *       404:
  *         description: Visit not found
  */
-router.get('/:id', async (req, res) => {
-  try {
-    const visit = await db.Visiit.findByPk(req.params.id);
-    if (!visit) return res.status(404).json({ error: 'Not found' });
-    res.json(visit);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// GET visit by ID
+router.get('/:id', authenticateJWT, authorizeRoles('Admin', 'User'), crud.get);
 
 /**
  * @swagger
@@ -72,27 +71,22 @@ router.get('/:id', async (req, res) => {
  *       201:
  *         description: Visit created
  */
-router.post(
-  '/',
-  [
-    body('PatsiendiID').isInt(),
-    body('HaigusluguID').isInt(),
-    body('Kuup2ev').isISO8601(),
-    body('Kaal').isFloat()
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-      const visit = await db.Visiit.create(req.body);
-      res.status(201).json(visit);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+// POST create visit
+router.post('/', authenticateJWT, authorizeRoles('Admin', 'User'), [
+  body('PatsiendiID').isInt(),
+  body('HaigusluguID').isInt(),
+  body('Kuup2ev').isISO8601(),
+  body('Kaal').isFloat()
+], validate, async (req, res, next) => {
+  try {
+    const item = await db.Visiit.create(req.body);
+    logCreate('Visit', req.user?.id || 'unknown', req.body);
+    res.status(201).json(item);
+  } catch (err) {
+    logError('Visit', 'creating', err.message, { data: req.body });
+    next(err);
   }
-);
+});
 
 /**
  * @swagger
@@ -128,36 +122,21 @@ router.post(
  *       404:
  *         description: Visit not found
  */
-router.put(
-  '/:id',
-  [
-    param('id').isInt(),
-    body('PatsiendiID').optional().isInt(),
-    body('HaigusluguID').optional().isInt(),
-    body('Kuup2ev').optional().isISO8601(),
-    body('Kaal').optional().isFloat()
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-      const visit = await db.Visiit.findByPk(req.params.id);
-      if (!visit) return res.status(404).json({ error: 'Not found' });
-      await visit.update(req.body);
-      res.json(visit);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
+// PUT update visit
+router.put('/:id', authenticateJWT, authorizeRoles('Admin', 'User'), [
+  param('id').isInt(),
+  body('PatsiendiID').optional().isInt(),
+  body('HaigusluguID').optional().isInt(),
+  body('Kuup2ev').optional().isISO8601(),
+  body('Kaal').optional().isFloat()
+], validate, crud.update);
 
+// DELETE visit by ID (admin only)
 /**
  * @swagger
  * /visiidid/{id}:
  *   delete:
- *     summary: Delete a visit by ID
+ *     summary: Delete a visit by ID (Admin only)
  *     tags: [Visiidid]
  *     parameters:
  *       - in: path
@@ -171,33 +150,41 @@ router.put(
  *       404:
  *         description: Visit not found
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), async (req, res, next) => {
   try {
-    const visit = await db.Visiit.findByPk(req.params.id);
-    if (!visit) return res.status(404).json({ error: 'Not found' });
-    await visit.destroy();
+    const item = await db.Visiit.findByPk(req.params.id);
+    if (!item) {
+      logWarnNotFound('Visit', req.user?.id || 'unknown', req.params);
+      return res.status(404).json({ error: 'Not found' });
+    }
+    await item.destroy();
+    logDelete('Visit', req.user?.id || 'unknown', req.params);
     res.status(204).send();
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError('Visit', 'deleting', err.message, { params: req.params });
+    next(err);
   }
 });
 
+// DELETE all visits (admin only)
 /**
  * @swagger
  * /visiidid:
  *   delete:
- *     summary: Delete all visits
+ *     summary: Delete all visits (Admin only)
  *     tags: [Visiidid]
  *     responses:
  *       204:
  *         description: All visits deleted
  */
-router.delete('/', async (req, res) => {
+router.delete('/', authenticateJWT, authorizeRoles('Admin'), async (req, res, next) => {
   try {
     await db.Visiit.destroy({ where: {} });
+    logDelete('All Visits', req.user?.id || 'unknown', {});
     res.status(204).send();
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError('Visit', 'deleting all', err.message, {});
+    next(err);
   }
 });
 

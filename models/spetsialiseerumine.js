@@ -1,4 +1,4 @@
-// models/spetsialiseerumine.js
+
 module.exports = (sequelize, DataTypes) => {
   const Spetsialiseerumine = sequelize.define('Spetsialiseerumine', {
     SpetsialiseerumineID: {
@@ -20,7 +20,6 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false
   });
 
-  // No associations needed unless you want to link to T99tajad or other tables
 
   return Spetsialiseerumine;
 };

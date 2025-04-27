@@ -1,4 +1,4 @@
-// models/patsiendid.js
+
 module.exports = (sequelize, DataTypes) => {
   const Patsiendid = sequelize.define('Patsiendid', {
     PatsiendiID: {
@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     Nimi: DataTypes.STRING,
     Vanus: DataTypes.INTEGER,
-    T6ug: DataTypes.STRING, // Fix: use Tõug to match DB column
+    T6ug: DataTypes.STRING, 
     Steriliseerimine: DataTypes.BOOLEAN,
     LiigiID: DataTypes.INTEGER,
     KliendiID: DataTypes.INTEGER,
@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     HaiguslooID: DataTypes.INTEGER
   }, {
     tableName: 'Patsiendid',
-    schema: 'clinic', // Add schema to match DB
+    schema: 'clinic', 
     timestamps: false
   });
 

@@ -1,7 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../models');
-const { body, param, validationResult } = require('express-validator');
+const { body, param } = require('express-validator');
+const { authenticateJWT, authorizeRoles } = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const createCrudController = require('../controllers/crudController');
+const { logCreate, logDelete, logWarnNotFound, logError } = require('../logger');
+
+const crud = createCrudController(db.Liik);
 
 /**
  * @swagger
@@ -13,10 +19,10 @@ const { body, param, validationResult } = require('express-validator');
  *       200:
  *         description: List of species
  */
-router.get('/', async (req, res) => {
-  const species = await db.Liik.findAll();
-  res.json(species);
-});
+// Protect all endpoints except admin-only with authenticateJWT and authorizeRoles('Admin', 'User')
+
+// GET all species
+router.get('/', authenticateJWT, authorizeRoles('Admin', 'User'), crud.list);
 
 /**
  * @swagger
@@ -36,15 +42,8 @@ router.get('/', async (req, res) => {
  *       404:
  *         description: Species not found
  */
-router.get('/:id', async (req, res) => {
-  try {
-    const liik = await db.Liik.findByPk(req.params.id);
-    if (!liik) return res.status(404).json({ error: 'Not found' });
-    res.json(liik);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// GET species by ID
+router.get('/:id', authenticateJWT, authorizeRoles('Admin', 'User'), crud.get);
 
 /**
  * @swagger
@@ -65,22 +64,17 @@ router.get('/:id', async (req, res) => {
  *       201:
  *         description: Species created
  */
-router.post(
-  '/',
-  [body('Nimetus').isString().notEmpty()],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-      const liik = await db.Liik.create(req.body);
-      res.status(201).json(liik);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+// POST create species
+router.post('/', authenticateJWT, authorizeRoles('Admin', 'User'), [body('Nimetus').isString().notEmpty()], validate, async (req, res, next) => {
+  try {
+    const item = await db.Liik.create(req.body);
+    logCreate('Species', req.user?.id || 'unknown', req.body);
+    res.status(201).json(item);
+  } catch (err) {
+    logError('Species', 'creating', err.message, { data: req.body });
+    next(err);
   }
-);
+});
 
 /**
  * @swagger
@@ -109,70 +103,44 @@ router.post(
  *       404:
  *         description: Species not found
  */
-router.put(
-  '/:id',
-  [param('id').isInt(), body('Nimetus').optional().isString()],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-      const liik = await db.Liik.findByPk(req.params.id);
-      if (!liik) return res.status(404).json({ error: 'Not found' });
-      await liik.update(req.body);
-      res.json(liik);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
-
-/**
- * @swagger
- * /liigid/{id}:
- *   delete:
- *     summary: Delete a species by ID
- *     tags: [Liigid]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       204:
- *         description: Species deleted
- *       404:
- *         description: Species not found
- */
-router.delete('/:id', async (req, res) => {
-  try {
-    const liik = await db.Liik.findByPk(req.params.id);
-    if (!liik) return res.status(404).json({ error: 'Not found' });
-    await liik.destroy();
-    res.status(204).send();
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// PUT update species
+router.put('/:id', authenticateJWT, authorizeRoles('Admin', 'User'), [param('id').isInt(), body('Nimetus').optional().isString()], validate, crud.update);
 
 /**
  * @swagger
  * /liigid:
  *   delete:
- *     summary: Delete all species
+ *     summary: Delete all species (Admin only)
  *     tags: [Liigid]
  *     responses:
  *       204:
  *         description: All species deleted
  */
-router.delete('/', async (req, res) => {
+router.delete('/', authenticateJWT, authorizeRoles('Admin'), async (req, res, next) => {
   try {
     await db.Liik.destroy({ where: {} });
+    logDelete('All Species', req.user?.id || 'unknown', {});
     res.status(204).send();
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError('Species', 'deleting all', err.message, {});
+    next(err);
+  }
+});
+
+// DELETE species by ID (admin only)
+router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), async (req, res, next) => {
+  try {
+    const item = await db.Liik.findByPk(req.params.id);
+    if (!item) {
+      logWarnNotFound('Species', req.user?.id || 'unknown', req.params);
+      return res.status(404).json({ error: 'Not found' });
+    }
+    await item.destroy();
+    logDelete('Species', req.user?.id || 'unknown', req.params);
+    res.status(204).send();
+  } catch (err) {
+    logError('Species', 'deleting', err.message, { params: req.params });
+    next(err);
   }
 });
 

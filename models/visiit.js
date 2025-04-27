@@ -1,4 +1,4 @@
-// models/visiit.js
+
 module.exports = (sequelize, DataTypes) => {
   const Visiit = sequelize.define('Visiit', {
     VisiidiID: {
@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     PatsiendiID: DataTypes.INTEGER,
     T99tajaID: DataTypes.INTEGER,
-    Kuup2ev: DataTypes.DATE, // <-- updated to match your DB
+    Kuup2ev: DataTypes.DATE, 
     Kaal: DataTypes.FLOAT,
     HaiguslooID: DataTypes.INTEGER
   }, {

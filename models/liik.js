@@ -1,4 +1,4 @@
-// models/liik.js
+
 module.exports = (sequelize, DataTypes) => {
   const Liik = sequelize.define('Liik', {
     LiigiID: {
@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     Nimetus: DataTypes.STRING
   }, {
     tableName: 'Liik',
-    schema: 'clinic',   // <--- this line is important!
+    schema: 'clinic',   
     timestamps: false
   });
 

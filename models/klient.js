@@ -1,7 +1,7 @@
-// models/klient.js
+
 module.exports = (sequelize, DataTypes) => {
   const Klient = sequelize.define('Klient', {
-    KliendiID: { // <-- Fix this line!
+    KliendiID: { 
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true

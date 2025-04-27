@@ -1,4 +1,4 @@
-// models/haiguslood.js
+
 module.exports = (sequelize, DataTypes) => {
   const Haiguslood = sequelize.define('Haiguslood', {
     HaigusloodID: {

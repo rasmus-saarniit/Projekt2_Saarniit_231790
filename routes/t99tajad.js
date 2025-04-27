@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../models');
-const { body, param, validationResult } = require('express-validator');
+const { body, param } = require('express-validator');
+const { authenticateJWT, authorizeRoles } = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const createCrudController = require('../controllers/crudController');
+
+const crud = createCrudController(db.T99tajad);
 
 /**
  * @swagger
@@ -13,10 +18,10 @@ const { body, param, validationResult } = require('express-validator');
  *       200:
  *         description: List of employees
  */
-router.get('/', async (req, res) => {
-  const employees = await db.T99tajad.findAll();
-  res.json(employees);
-});
+// Protect all endpoints except admin-only with authenticateJWT and authorizeRoles('Admin', 'User')
+
+// GET all employees
+router.get('/', authenticateJWT, authorizeRoles('Admin', 'User'), crud.list);
 
 /**
  * @swagger
@@ -36,15 +41,8 @@ router.get('/', async (req, res) => {
  *       404:
  *         description: Employee not found
  */
-router.get('/:id', async (req, res) => {
-  try {
-    const employee = await db.T99tajad.findByPk(req.params.id);
-    if (!employee) return res.status(404).json({ error: 'Not found' });
-    res.json(employee);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// GET employee by ID (admin only)
+router.get('/:id', authenticateJWT, authorizeRoles('Admin'), crud.get);
 
 /**
  * @swagger
@@ -69,25 +67,17 @@ router.get('/:id', async (req, res) => {
  *       201:
  *         description: Employee created
  */
-router.post(
-  '/',
+// POST create employee (admin or user)
+router.post('/',
+  authenticateJWT,
+  authorizeRoles('Admin', 'User'),
   [
     body('Eesnimi').isString().notEmpty(),
     body('Perekonnanimi').isString().notEmpty(),
     body('Valdkond').isString().notEmpty()
   ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-      const employee = await db.T99tajad.create(req.body);
-      res.status(201).json(employee);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
+  validate,
+  crud.create
 );
 
 /**
@@ -121,35 +111,25 @@ router.post(
  *       404:
  *         description: Employee not found
  */
-router.put(
-  '/:id',
+// PUT update employee (admin or user)
+router.put('/:id',
+  authenticateJWT,
+  authorizeRoles('Admin', 'User'),
   [
     param('id').isInt(),
     body('Eesnimi').optional().isString(),
     body('Perekonnanimi').optional().isString(),
     body('Valdkond').optional().isString()
   ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-      const employee = await db.T99tajad.findByPk(req.params.id);
-      if (!employee) return res.status(404).json({ error: 'Not found' });
-      await employee.update(req.body);
-      res.json(employee);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
+  validate,
+  crud.update
 );
 
 /**
  * @swagger
  * /tootajad/{id}:
  *   delete:
- *     summary: Delete an employee by ID
+ *     summary: Delete an employee by ID (Admin only)
  *     tags: [Töötajad]
  *     parameters:
  *       - in: path
@@ -163,34 +143,20 @@ router.put(
  *       404:
  *         description: Employee not found
  */
-router.delete('/:id', async (req, res) => {
-  try {
-    const employee = await db.T99tajad.findByPk(req.params.id);
-    if (!employee) return res.status(404).json({ error: 'Not found' });
-    await employee.destroy();
-    res.status(204).send();
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// DELETE employee by ID (protected)
+router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), crud.delete);
 
 /**
  * @swagger
  * /tootajad:
  *   delete:
- *     summary: Delete all employees
+ *     summary: Delete all employees (Admin only)
  *     tags: [Töötajad]
  *     responses:
  *       204:
  *         description: All employees deleted
  */
-router.delete('/', async (req, res) => {
-  try {
-    await db.T99tajad.destroy({ where: {} });
-    res.status(204).send();
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// DELETE all employees (protected)
+router.delete('/', authenticateJWT, authorizeRoles('Admin'), crud.deleteAll);
 
 module.exports = router;
