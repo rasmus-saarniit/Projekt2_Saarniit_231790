@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('./config/database'); 
+const db = require('./config/database');      
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const patsiendidRouter = require('./routes/patsiendid');
@@ -9,13 +9,10 @@ const visiididRouter = require('./routes/visiidid');
 const haigusloodRouter = require('./routes/haiguslood');
 const t99tajadRouter = require('./routes/t99tajad');
 const spetsialiseerumisedRouter = require('./routes/spetsialiseerumised');
-const cors = require('cors');
 const authRouter = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-app.use(cors()); // Enable CORS for all origins
 
 app.use(express.json());
 
@@ -57,6 +54,9 @@ app.use('/visiidid', visiididRouter);
 app.use('/haiguslood', haigusloodRouter);
 app.use('/tootajad', t99tajadRouter);
 app.use('/spetsialiseerumised', spetsialiseerumisedRouter);
+
+// Use centralized CORS middleware
+app.use(require('./middleware/cors'));
 
 // Global error handler (must be after all routes)
 app.use(require('./middleware/errorHandler'));
