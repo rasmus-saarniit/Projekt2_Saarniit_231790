@@ -92,6 +92,14 @@ A backup of the database is available in `DB_SaarniitRasmus27.04.sql` in the pro
 
 > **Note:** The backup file contains the schema and data as of 27.04.2025. If you update the database, consider exporting a new backup for future use.
 
+## Demo Video
+
+A short project introduction/demo video is included:
+
+- [DemoTutvustus.mkv](./DemoTutvustus.mkv)
+
+Download and play this file to see quick demo of the backend features and setup.
+
 Lisbeth Männiste ja Rasmus Saarniit
 
 ## License
