@@ -25,9 +25,8 @@ A Node.js/Express/Sequelize backend for a veterinary clinic, featuring robust au
 
 > **Note:** All endpoints except `/auth/login` require a valid JWT and either Admin or User role. Admin-only endpoints are clearly marked in Swagger docs.
 
-## Getting Started
+## Installation
 
-1. **Install dependencies:**
 Install all required dependencies:
 
 ```sh
@@ -45,22 +44,13 @@ npm install express sequelize tedious dotenv swagger-jsdoc swagger-ui-express ex
 - `cors` — CORS middleware
 - `winston` — Logging
 
-or 
-   ```sh
-   npm install
-   ```
-   
-2. **Configure environment:**
-   - Copy `.env` and set DB credentials if needed.
-3. **Run the server:**
-   ```sh
-   npm start
-   ```
-   or for development with auto-reload:
-   ```sh
-   npm run dev
-   ```
-4. **Access API docs:**
+
+## Setup
+
+1. Copy `.env.example` to `.env` and fill in your database credentials.
+2. Run the app with `npm start` or `npm run dev`.
+
+## Access API docs:
    - Open [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
 
 ## Logging
@@ -100,6 +90,9 @@ A backup of the database is available in `DB_SaarniitRasmus27.04.sql` in the pro
    - In SSMS: File → Open → File... → select the `.sql` file, then click Execute.
 4. Update your `.env` file with the correct database name and credentials if needed.
 
+> **Note:** The backup file contains the schema and data as of 27.04.2025. If you update the database, consider exporting a new backup for future use.
+
+Lisbeth Männiste ja Rasmus Saarniit
 
 ## License
 MIT
