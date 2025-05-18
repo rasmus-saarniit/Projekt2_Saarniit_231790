@@ -1,7 +1,7 @@
 
 module.exports = (sequelize, DataTypes) => {
   const Haiguslood = sequelize.define('Haiguslood', {
-    HaigusloodID: {
+    HaiguslooID: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     PatsiendiID: DataTypes.INTEGER,
     T99tajaID: DataTypes.INTEGER,
     KliendiID: DataTypes.INTEGER,
-    Kuup2ev: DataTypes.DATE,
+    Kuupäev: DataTypes.DATE,
     Kirjeldus: DataTypes.STRING
   }, {
     tableName: 'Haiguslood',

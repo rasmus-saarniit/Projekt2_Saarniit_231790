@@ -25,5 +25,11 @@ module.exports = (sequelize, DataTypes) => {
     schema: 'clinic',
     timestamps: true // Sequelize will handle createdAt/updatedAt
   });
+  Kasutajad.associate = function(models) {
+    // A user can delete many patients (audit log)
+    Kasutajad.hasMany(models.Patsiendid_Audit, { foreignKey: 'DeletedByUserID' });
+    // A user can be an employee (T99taja)
+    Kasutajad.hasOne(models.T99tajad, { foreignKey: 'UserID' });
+  };
   return Kasutajad;
 };

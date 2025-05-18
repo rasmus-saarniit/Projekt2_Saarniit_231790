@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
     Perekonnanimi: {
       type: DataTypes.STRING,
       allowNull: false
-    }
+    },
+    UserID: DataTypes.INTEGER // Foreign key to Kasutajad
   }, {
     tableName: 'T99tajad',
     schema: 'clinic',
@@ -31,6 +32,8 @@ module.exports = (sequelize, DataTypes) => {
     T99tajad.hasMany(models.Haiguslood, { foreignKey: 'T99tajaID' });
     // One employee can have many specializations
     T99tajad.hasMany(models.Spetsialiseerumine, { foreignKey: 'T99tajaID' });
+    // Each employee is a user
+    T99tajad.belongsTo(models.Kasutajad, { foreignKey: 'UserID' });
   };
 
   return T99tajad;

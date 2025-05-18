@@ -53,6 +53,9 @@ app.use('/liigid', liigidRouter);
 app.use('/visiidid', visiididRouter);
 app.use('/haiguslood', haigusloodRouter);
 app.use('/tootajad', t99tajadRouter);
+
+const patsiendidAuditRouter = require('./routes/patsiendid_audit');
+app.use('/patsiendid_audit', patsiendidAuditRouter);
 app.use('/spetsialiseerumised', spetsialiseerumisedRouter);
 
 // Use centralized CORS middleware

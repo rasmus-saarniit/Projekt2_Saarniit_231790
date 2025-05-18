@@ -68,6 +68,7 @@ router.get('/:id', authenticateJWT, authorizeRoles('Admin'), crud.get);
  *         description: Employee created
  */
 // POST create employee (admin or user)
+// When creating an employee, link to the current user if available
 router.post('/',
   authenticateJWT,
   authorizeRoles('Admin', 'User'),
@@ -77,7 +78,18 @@ router.post('/',
     body('Valdkond').isString().notEmpty()
   ],
   validate,
-  crud.create
+  async (req, res, next) => {
+    try {
+      const data = { ...req.body };
+      if (req.user && req.user.id) {
+        data.UserID = req.user.id;
+      }
+      const item = await db.T99tajad.create(data);
+      res.status(201).json(item);
+    } catch (err) {
+      next(err);
+    }
+  }
 );
 
 /**

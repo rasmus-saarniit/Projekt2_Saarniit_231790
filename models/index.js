@@ -35,6 +35,14 @@ fs
     db[model.name] = model;
   });
 
+// Ensure Patsiendid_Audit is loaded if present
+try {
+  const PatsiendidAudit = require('./patsiendid_audit')(sequelize, Sequelize.DataTypes);
+  db[PatsiendidAudit.name] = PatsiendidAudit;
+} catch (e) {
+  // ignore if not present
+}
+
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);

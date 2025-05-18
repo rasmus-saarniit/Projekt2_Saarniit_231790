@@ -78,15 +78,19 @@ router.post('/', authenticateJWT, authorizeRoles('Admin', 'User'), [
   body('PatsiendiID').isInt(),
   body('T99tajaID').isInt(),
   body('KliendiID').isInt(),
-  body('Kuup2ev').isISO8601(),
+  // Kuupäev is not required from user, will be set automatically
   body('Kirjeldus').isString()
 ], validate, async (req, res, next) => {
   try {
+    // Always set Kuupäev to current date (YYYY-MM-DD)
+    req.body.Kuupäev = new Date().toISOString().slice(0, 10);
     const item = await db.Haiguslood.create(req.body);
     logCreate('MedicalRecord', req.user?.id || 'unknown', req.body);
     res.status(201).json(item);
   } catch (err) {
-    logError('MedicalRecord', 'creating', err.message, { data: req.body });
+    // Log full error for debugging
+    console.error('Error creating MedicalRecord:', err);
+    logError('MedicalRecord', 'creating', err.message, { data: req.body, full: err });
     next(err);
   }
 });
@@ -127,7 +131,7 @@ router.post('/', authenticateJWT, authorizeRoles('Admin', 'User'), [
 router.put('/:id', authenticateJWT, authorizeRoles('Admin', 'User'), [
   param('id').isInt(),
   body('PatsiendiID').optional().isInt(),
-  body('Kuup2ev').optional().isISO8601(),
+  body('Kuupäev').optional().isISO8601(),
   body('Kirjeldus').optional().isString()
 ], validate, crud.update);
 

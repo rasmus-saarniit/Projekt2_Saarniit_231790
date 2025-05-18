@@ -166,6 +166,20 @@ router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), async (req, res,
       logWarnNotFound('Patient', req.user?.id || 'unknown', req.params);
       return res.status(404).json({ error: 'Not found' });
     }
+    // Copy to audit table before deleting
+    await db.Patsiendid_Audit.create({
+      PatsiendiID: item.PatsiendiID,
+      Nimi: item.Nimi,
+      Vanus: item.Vanus,
+      T6ug: item.T6ug,
+      Steriliseerimine: item.Steriliseerimine,
+      LiigiID: item.LiigiID,
+      KliendiID: item.KliendiID,
+      VisiidiID: item.VisiidiID,
+      HaiguslooID: item.HaiguslooID,
+      DeletedAt: new Date(),
+      DeletedByUserID: req.user?.id || null
+    });
     await item.destroy();
     logDelete('Patient', req.user?.id || 'unknown', req.params);
     res.status(204).send();
