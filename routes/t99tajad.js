@@ -4,9 +4,7 @@ const db = require('../models');
 const { body, param } = require('express-validator');
 const { authenticateJWT, authorizeRoles } = require('../middleware/auth');
 const validate = require('../middleware/validate');
-const createCrudController = require('../controllers/crudController');
-
-const crud = createCrudController(db.T99tajad);
+const t99tajadController = require('../controllers/t99tajadController');
 
 /**
  * @swagger
@@ -21,7 +19,7 @@ const crud = createCrudController(db.T99tajad);
 // Protect all endpoints except admin-only with authenticateJWT and authorizeRoles('Admin', 'User')
 
 // GET all employees
-router.get('/', authenticateJWT, authorizeRoles('Admin', 'User'), crud.list);
+router.get('/', authenticateJWT, authorizeRoles('Admin', 'User'), t99tajadController.list);
 
 /**
  * @swagger
@@ -42,7 +40,7 @@ router.get('/', authenticateJWT, authorizeRoles('Admin', 'User'), crud.list);
  *         description: Employee not found
  */
 // GET employee by ID (admin only)
-router.get('/:id', authenticateJWT, authorizeRoles('Admin'), crud.get);
+router.get('/:id', authenticateJWT, authorizeRoles('Admin'), t99tajadController.get);
 
 /**
  * @swagger
@@ -134,7 +132,7 @@ router.put('/:id',
     body('Valdkond').optional().isString()
   ],
   validate,
-  crud.update
+  t99tajadController.update
 );
 
 /**
@@ -156,7 +154,7 @@ router.put('/:id',
  *         description: Employee not found
  */
 // DELETE employee by ID (protected)
-router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), crud.delete);
+router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), t99tajadController.delete);
 
 /**
  * @swagger
@@ -169,6 +167,6 @@ router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), crud.delete);
  *         description: All employees deleted
  */
 // DELETE all employees (protected)
-router.delete('/', authenticateJWT, authorizeRoles('Admin'), crud.deleteAll);
+router.delete('/', authenticateJWT, authorizeRoles('Admin'), t99tajadController.deleteAll);
 
 module.exports = router;

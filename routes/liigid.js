@@ -8,7 +8,7 @@ const createCrudController = require('../controllers/crudController');
 const { logCreate, logDelete, logWarnNotFound, logError } = require('../logger');
 
 const crud = createCrudController(db.Liik);
-
+const liigidController = require('../controllers/liigidController');
 /**
  * @swagger
  * /liigid:
@@ -104,7 +104,7 @@ router.post('/', authenticateJWT, authorizeRoles('Admin', 'User'), [body('Nimetu
  *         description: Species not found
  */
 // PUT update species
-router.put('/:id', authenticateJWT, authorizeRoles('Admin', 'User'), [param('id').isInt(), body('Nimetus').optional().isString()], validate, crud.update);
+router.put('/:id', authenticateJWT, authorizeRoles('Admin', 'User'), [param('id').isInt(), body('Nimetus').optional().isString()], validate, liigidController.update);
 
 /**
  * @swagger

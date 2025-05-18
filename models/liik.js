@@ -1,4 +1,3 @@
-
 module.exports = (sequelize, DataTypes) => {
   const Liik = sequelize.define('Liik', {
     LiigiID: {
@@ -6,7 +5,15 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
-    Nimetus: DataTypes.STRING
+    Nimetus: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: {
+        notEmpty: { msg: 'Nimetus on kohustuslik' },
+        len: { args: [2, 50], msg: 'Nimetus peab olema 2-50 tähemärki' }
+      }
+    }
   }, {
     tableName: 'Liik',
     schema: 'clinic',   

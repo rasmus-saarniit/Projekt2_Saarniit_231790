@@ -1,4 +1,3 @@
-
 module.exports = (sequelize, DataTypes) => {
   const Patsiendid = sequelize.define('Patsiendid', {
     PatsiendiID: {
@@ -6,14 +5,54 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
-    Nimi: DataTypes.STRING,
-    Vanus: DataTypes.INTEGER,
-    T6ug: DataTypes.STRING, 
-    Steriliseerimine: DataTypes.BOOLEAN,
-    LiigiID: DataTypes.INTEGER,
-    KliendiID: DataTypes.INTEGER,
-    VisiidiID: DataTypes.INTEGER,
-    HaiguslooID: DataTypes.INTEGER
+    Nimi: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: { msg: 'Nimi on kohustuslik' },
+        len: { args: [2, 50], msg: 'Nimi peab olema 2-50 tähemärki' }
+      }
+    },
+    Vanus: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        isInt: { msg: 'Vanus peab olema täisarv' },
+        min: { args: [0], msg: 'Vanus peab olema vähemalt 0' },
+        max: { args: [100], msg: 'Vanus ei tohi ületada 100' }
+      }
+    },
+    T6ug: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+        len: { args: [0, 50], msg: 'Tõug võib olla kuni 50 tähemärki' }
+      }
+    },
+    Steriliseerimine: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true
+    },
+    LiigiID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: { isInt: { msg: 'LiigiID peab olema täisarv' } }
+    },
+    KliendiID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: { isInt: { msg: 'KliendiID peab olema täisarv' } }
+    },
+    VisiidiID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: { isInt: { msg: 'VisiidiID peab olema täisarv' } }
+    },
+    HaiguslooID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: { isInt: { msg: 'HaiguslooID must be an integer' } }
+    }
   }, {
     tableName: 'Patsiendid',
     schema: 'clinic', 

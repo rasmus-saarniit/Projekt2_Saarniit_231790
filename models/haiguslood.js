@@ -1,4 +1,3 @@
-
 module.exports = (sequelize, DataTypes) => {
   const Haiguslood = sequelize.define('Haiguslood', {
     HaiguslooID: {
@@ -6,11 +5,33 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
-    PatsiendiID: DataTypes.INTEGER,
-    T99tajaID: DataTypes.INTEGER,
-    KliendiID: DataTypes.INTEGER,
-    Kuupäev: DataTypes.DATE,
-    Kirjeldus: DataTypes.STRING
+    PatsiendiID: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: { isInt: { msg: 'PatsiendiID peab olema täisarv' } }
+    },
+    T99tajaID: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: { isInt: { msg: 'T99tajaID peab olema täisarv' } }
+    },
+    KliendiID: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: { isInt: { msg: 'KliendiID peab olema täisarv' } }
+    },
+    Kuupäev: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      validate: { isDate: { msg: 'Kuupäev peab olema kehtiv kuupäev' } }
+    },
+    Kirjeldus: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+        len: { args: [0, 255], msg: 'Kirjeldus võib olla kuni 255 tähemärki' }
+      }
+    }
   }, {
     tableName: 'Haiguslood',
     schema: 'clinic',

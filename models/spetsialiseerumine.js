@@ -1,4 +1,3 @@
-
 module.exports = (sequelize, DataTypes) => {
   const Spetsialiseerumine = sequelize.define('Spetsialiseerumine', {
     SpetsialiseerumineID: {
@@ -8,11 +7,16 @@ module.exports = (sequelize, DataTypes) => {
     },
     ArstiID: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      validate: { isInt: { msg: 'ArstiID peab olema täisarv' } }
     },
     Valdkond: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notEmpty: { msg: 'Valdkond on kohustuslik' },
+        len: { args: [2, 50], msg: 'Valdkond peab olema 2-50 tähemärki' }
+      }
     }
   }, {
     tableName: 'Spetsialiseerumine',

@@ -6,19 +6,49 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
-    LaborandiID: DataTypes.INTEGER,
-    TehnikuID: DataTypes.INTEGER,
-    ArstiID: DataTypes.INTEGER,
-    Valdkond: DataTypes.STRING,
+    LaborandiID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: { isInt: { msg: 'LaborandiID peab olema täisarv' } }
+    },
+    TehnikuID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: { isInt: { msg: 'TehnikuID peab olema täisarv' } }
+    },
+    ArstiID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: { isInt: { msg: 'ArstiID peab olema täisarv' } }
+    },
+    Valdkond: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+        len: { args: [0, 50], msg: 'Valdkond võib olla kuni 50 tähemärki' }
+      }
+    },
     Eesnimi: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notEmpty: { msg: 'Eesnimi on kohustuslik' },
+        len: { args: [2, 50], msg: 'Eesnimi peab olema 2-50 tähemärki' }
+      }
     },
     Perekonnanimi: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notEmpty: { msg: 'Perekonnanimi on kohustuslik' },
+        len: { args: [2, 50], msg: 'Perekonnanimi peab olema 2-50 tähemärki' }
+      }
     },
-    UserID: DataTypes.INTEGER // Foreign key to Kasutajad
+    UserID: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: { isInt: { msg: 'UserID peab olema täisarv' } }
+    } // Foreign key to Kasutajad
   }, {
     tableName: 'T99tajad',
     schema: 'clinic',
